@@ -2,17 +2,19 @@
 These are some pyspark demonstrations for NLP purposes.
 
 All models are saved to the `\models` directory. 
-# Files
+# Files and Directories
 
-`/models`
+## `/models`
 
 Serialized form of trained pyspark models and pipelines
 
-`/metrics`
+## `/metrics`
 
 Resulting metrics after training models
 
-`logistic_regression_sentiment.py`
+## `logistic_regression_sentiment.py`
+
+## About
 
 This file builds a simple logistic regression model using a BoW approach. 
 
@@ -46,12 +48,15 @@ Not specifying any limit will let the model train on the entire dataset.
 |      0.796     |     0.754     |
 
 
-`logistic_regression_sentiment_weighted.py`
+## `logistic_regression_sentiment_weighted.py`
 
+## About
+
+This file builds on the previous file, and implements class-weighting. The method for factoring in class weights (in `scikit-learn` fashion), was found from [this awesome blog post](https://danvatterott.com/blog/2019/11/18/balancing-model-weights-in-pyspark/). This resulted in a dramatic increase in performance from the unweighted model, as displayed in the results section below. 
 
 ## Usage
-This file can be used in the same way that `logistic_regression_sentiment.py` is used, but it also implements class weights instead of undersampling the highest class. 
 
+This file can be used in the same way that `logistic_regression_sentiment.py` is used, but it also implements class weights instead of undersampling the highest class. 
 
 ## Results
 
