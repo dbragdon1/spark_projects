@@ -6,29 +6,10 @@ from pyspark.mllib.evaluation import BinaryClassificationMetrics
 from pyspark.sql.functions import col
 import re
 from nltk.corpus import stopwords
-import json
 from string import punctuation
-import nltk
-import os 
+import nltk 
 import sys
-import urllib.request
-import json
-import gzip
-
-def load_file(num_examples):
-  link = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/reviews_Cell_Phones_and_Accessories_5.json.gz"
-  stream = urllib.request.urlopen(link)
-  file = gzip.open(stream)
-  lines = []
-  if num_examples == -1:
-    for i, line in enumerate(file):
-      lines.append(json.loads(line))
-  else:
-    for i, line in enumerate(file):
-      lines.append(json.loads(line))
-      if i == num_examples - 1:
-        break
-  return lines
+from helper_functions import load_amazon_cellphones
   
 nltk.download('stopwords')
 sw = list(set(stopwords.words('english')))
@@ -40,7 +21,7 @@ else:
 
 print('Loading raw data file.')
 
-lines = load_file(num_train_samples)
+lines = load_amazon_cellphones(num_train_samples)
 
 print('Building Spark Session.')
 spark = SparkSession.builder.master("local[*]") \

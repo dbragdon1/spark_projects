@@ -7,32 +7,11 @@ import pyspark.sql.functions as F
 from itertools import chain
 import re
 from nltk.corpus import stopwords
-import json
 from string import punctuation
 import nltk
-import os 
 import sys
-import urllib.request
-import json
-import gzip
-import numpy as np
+from helper_functions import get_class_weights, load_amazon_cellphones
 
-
-def load_file(num_examples):
-  link = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/reviews_Cell_Phones_and_Accessories_5.json.gz"
-  stream = urllib.request.urlopen(link)
-  file = gzip.open(stream)
-  lines = []
-  if num_examples == -1:
-    for i, line in enumerate(file):
-      lines.append(json.loads(line))
-  else:
-    for i, line in enumerate(file):
-      lines.append(json.loads(line))
-      if i == num_examples - 1:
-        break
-  return lines
-  
 nltk.download('stopwords')
 sw = list(set(stopwords.words('english')))
 
@@ -43,7 +22,7 @@ else:
 
 print('Loading raw data file.')
 
-lines = load_file(num_train_samples)
+lines = load_amazon_cellphones(num_train_samples)
 
 print('Building Spark Session.')
 spark = SparkSession.builder.master("local[*]") \
@@ -81,13 +60,10 @@ rdd = sc.parallelize(relevant_info)
 
 #Removing Neutral reviews
 rdd = rdd.filter(lambda x: x[1] != 3.0)
-
 #converting scores into integer
 rdd = rdd.map(lambda x: (x[0], create_categories(x[1])))
-
 #preprocessing reviews
 rdd = rdd.map(lambda x: (clean(x[0]), x[1]))
-
 #removing empty reviews
 rdd = rdd.filter(lambda x: x[0] != '')
 
@@ -99,20 +75,7 @@ data.show()
 data.printSchema()
 
 print('Calculating Class Weights. \n')
-label_collect = data.select('label').groupby('label').count().collect()
-unique_labels = [x['label'] for x in label_collect]
-total_labels = sum([x['count'] for x in label_collect])
-unique_label_count = len(label_collect)
-bin_count = [x['count'] for x in label_collect]
-class_weights_spark = {i: ii for i, ii in zip(unique_labels, total_labels / (unique_label_count * np.array(bin_count)))}
-mapping_expr = F.create_map([F.lit(x) for x in chain(*class_weights_spark.items())])
-data = data.withColumn('weight', mapping_expr.getItem(F.col('label')))
-
-print('Class Weights: \n')
-print(class_weights_spark)
-
-
-#Begin building preprocessing pipeline
+data = get_class_weights(data, labelCol = 'label')
 
 #Steps: Word tokenize --> remove stopwords --> convert to BoW vectors
 print('Building Pipeline.\n')
@@ -134,27 +97,16 @@ lr = LogisticRegression(featuresCol = 'features',
 
 pipeline = Pipeline(stages = [regexTokenizer, stopwordsRemover, countVectorizer, lr])
 
-#Split data into training and testing partitions
 print('Splitting data.\n')
 train_data, test_data = data.randomSplit([0.9, 0.1])
 
-#Fit and transform training data
 print('Fitting training data to pipeline.\n')
 pipelineFit = pipeline.fit(train_data)
 transformed_train_data = pipelineFit.transform(train_data)
-#transformed_train_data.show()
 
-#Begin Logistic Regression
-print('Training Logistic Regression Model.\n')
-#lr = LogisticRegression(featuresCol = 'features', labelCol = 'label')
-#lrModel = lr.fit(transformed_train_data)
-
-#Predict on test data
 print('Predicting on testing data.\n')
-#test_predictions = lrModel.transform(pipelineFit.transform(test_data))
 test_predictions = pipelineFit.transform(test_data)
 
-#Calculate Metrics
 print('Calculating Metrics.\n')
 metrics = BinaryClassificationMetrics(test_predictions.select('prediction', 'label').rdd)
 

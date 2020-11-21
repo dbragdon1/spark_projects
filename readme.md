@@ -52,7 +52,7 @@ Not specifying any limit will let the model train on the entire dataset.
 
 ## About
 
-This file builds on the previous file, and implements class-weighting. The method for factoring in class weights (in `scikit-learn` fashion), was found from [this awesome blog post](https://danvatterott.com/blog/2019/11/18/balancing-model-weights-in-pyspark/). This resulted in a dramatic increase in performance from the unweighted model, as displayed in the results section below. 
+This file builds on the previous file, and implements class-weighting. The method for factoring in class weights (in `scikit-learn` fashion), was found from [this awesome blog post](https://danvatterott.com/blog/2019/11/18/balancing-model-weights-in-pyspark/). This resulted in a dramatic increase in performance from the unweighted model, as displayed in the results section below. The code for implementing class-weighting is found in the `get_class_weights()` method in the `helper_functions.py` file. 
 
 ## Usage
 
@@ -63,4 +63,8 @@ This file can be used in the same way that `logistic_regression_sentiment.py` is
 | Area Under ROC | Area Under PR |
 |:--------------:|:-------------:|
 |      0.841    |     0.955     |
+
+## `helper_functions.py`
+
+Contains helper functions for training models. 
 
