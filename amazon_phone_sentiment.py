@@ -11,20 +11,42 @@ from string import punctuation
 import nltk
 import os 
 import sys
+import urllib.request
+import json
+import gzip
 
-num_train_samples = int(sys.argv[1])
+
+def load_file(num_examples):
+  link = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/reviews_Cell_Phones_and_Accessories_5.json.gz"
+  stream = urllib.request.urlopen(link)
+  file = gzip.open(stream)
+  #rawfile = open("data/cellphones.json", 'r')
+  lines = []
+  if num_examples == -1:
+    for i, line in enumerate(file):
+      lines.append(json.loads(line))
+  else:
+    for i, line in enumerate(file):
+      lines.append(json.loads(line))
+      if i == num_examples - 1:
+        break
+  return lines
+  
 
 nltk.download('stopwords')
 sw = list(set(stopwords.words('english')))
 
+if len(sys.argv) == 2:
+  num_train_samples = int(sys.argv[1])
+else:
+  num_train_samples = -1
+
+
+  
+
 print('Loading raw data file.')
-rawfile = open("data/cellphones.json", 'r')
-#load each line as separate json object
-lines = []
-for i, line in enumerate(rawfile):
-  lines.append(json.loads(line))
-  if i == num_train_samples - 1:
-    break
+
+lines = load_file(num_train_samples)
 
 print('Building Spark Session.')
 spark = SparkSession.builder.master("local[*]") \
@@ -58,8 +80,6 @@ relevant_info = [(line['reviewText'],
                  line['overall']) 
                  for line in lines]
 
-print(len(relevant_info))
-
 print('Parallelizing and Preprocessing.\n')
 rdd = sc.parallelize(relevant_info)
 
@@ -82,15 +102,20 @@ schema = ['review', 'label']
 data = rdd.toDF(schema = schema)
 data.show()
 data.printSchema()
-#data.select('label').describe().show()
 
 #Undersampling positive reviews to avoid class imbalance
 major_df = data.filter(col('label') == 1)
 minor_df = data.filter(col('label') == 0)
 
-sampled_majority_df = major_df.sample(False, .16)
-undersampled_data = sampled_majority_df.unionAll(minor_df)
-#undersampled_data.groupBy('label').count().show()
+diff = minor_df.count() / major_df.count()
+
+if diff < .4:
+  sampled_majority_df = major_df.sample(False, diff)
+  data = sampled_majority_df.unionAll(minor_df)
+
+
+print('Counts from Undersampling Largest Class: ')
+data.groupBy('label').count().show()
 
 #Begin building preprocessing pipeline
 
@@ -112,7 +137,7 @@ pipeline = Pipeline(stages = [regexTokenizer, stopwordsRemover, countVectorizer]
 
 #Split data into training and testing partitions
 print('Splitting data.\n')
-train_data, test_data = undersampled_data.randomSplit([0.9, 0.1])
+train_data, test_data = data.randomSplit([0.9, 0.1])
 
 #Fit and transform training data
 print('Fitting training data to pipeline.\n')
