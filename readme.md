@@ -22,7 +22,7 @@ python amazon_phone_sentiment.py
 **WARNING:** The resulting RDD is very large and the program will not run if you do not have enough memory to allocate. For this reason you can select the amount of points you'd like to train the model on like this:
 
 ``` bash
-python amazon_phone_sentiment 1000
+python amazon_phone_sentiment.py 1000
 ```
 
 This will train the model using 1000 samples. 
