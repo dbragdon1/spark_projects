@@ -15,12 +15,10 @@ import urllib.request
 import json
 import gzip
 
-
 def load_file(num_examples):
   link = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/reviews_Cell_Phones_and_Accessories_5.json.gz"
   stream = urllib.request.urlopen(link)
   file = gzip.open(stream)
-  #rawfile = open("data/cellphones.json", 'r')
   lines = []
   if num_examples == -1:
     for i, line in enumerate(file):
@@ -32,7 +30,6 @@ def load_file(num_examples):
         break
   return lines
   
-
 nltk.download('stopwords')
 sw = list(set(stopwords.words('english')))
 
@@ -40,9 +37,6 @@ if len(sys.argv) == 2:
   num_train_samples = int(sys.argv[1])
 else:
   num_train_samples = -1
-
-
-  
 
 print('Loading raw data file.')
 
