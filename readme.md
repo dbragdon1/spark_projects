@@ -27,7 +27,6 @@ Navigate to the directory of the file and run like so:
 ``` bash
 python logistic_regression_sentiment.py
 ```
-
 **WARNING:** The resulting RDD is very large and the program will not run if you do not have enough memory to allocate. For this reason you can select the amount of points you'd like to train the model on like this:
 
 ``` bash
@@ -40,5 +39,23 @@ This will train the model using 1000 samples.
 
 Not specifying any limit will let the model train on the entire dataset. 
 
+## Results
 
+| Area Under ROC | Area Under PR |
+|:--------------:|:-------------:|
+|      0.796     |     0.754     |
+
+
+`logistic_regression_sentiment_weighted.py`
+
+
+## Usage
+This file can be used in the same way that `logistic_regression_sentiment.py` is used, but it also implements class weights instead of undersampling the highest class. 
+
+
+## Results
+
+| Area Under ROC | Area Under PR |
+|:--------------:|:-------------:|
+|      0.841    |     0.955     |
 
