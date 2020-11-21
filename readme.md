@@ -7,7 +7,7 @@ These are some pyspark demonstrations for NLP purposes.
 
 This file builds a simple logistic regression model using a BoW approach. 
 
-The dataset is `cellphones.json`, collected from ![Professor Julian McAuley's Amazon product dataset](https://jmcauley.ucsd.edu/data/amazon/).
+The dataset is collected from [Professor Julian McAuley's Amazon product dataset](https://jmcauley.ucsd.edu/data/amazon/). This specific subset is titled "Cell Phones and Accessories". 
 
 The dataset label set ranges from 1.0 to 5.0. For the purpose of this project, I removed neutrally labelled points (3.0) set any point below 3.0 as 0, and any point above 3.0 as 1. 
 
