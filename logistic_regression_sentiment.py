@@ -148,13 +148,27 @@ lrModel = lr.fit(transformed_train_data)
 print('Predicting on testing data.\n')
 test_predictions = lrModel.transform(pipelineFit.transform(test_data))
 
-#Calculate Metrics
+"""#Calculate Metrics
 print('Calculating Metrics.\n')
 metrics = BinaryClassificationMetrics(test_predictions.select('prediction', 'label').rdd)
 
-print('Area under ROC: {}'.format(metrics.areaUnderROC))
-print('Area under Precision/Recall Curve: {}'.format(metrics.areaUnderPR))
+auroc = metrics.areaUnderROC
+aupr = metrics.areaUnderPR
 
+print('Area under ROC: {}'.format(auroc))
+print('Area under Precision/Recall Curve: {}'.format(aupr))
+
+with open('metrics/logistic_regression_sentiment_results.txt', 'w') as metricfile:
+    num_samples = train_data.count()
+    metricfile.write('Number of training samples after undersampling: {} \n'.format(num_samples))
+    metricfile.write('Area under ROC: {} \n'.format(auroc))
+    metricfile.write('Area under Precision/Recall Curve: {} \n'.format(aupr))
+"""
+modelpath = '/models/logistic_regression_sentiment/'
+
+#pipelineFit.save(sc, modelpath)
+pipelineFit.write().overwrite().save(modelpath)
+lrModel.write().overwrite().save(modelpath)
 
 
 
