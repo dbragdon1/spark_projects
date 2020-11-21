@@ -1,3 +1,3 @@
-Number of training samples after undersampling: 43723 
-Area under ROC: 0.7961478205248375 
-Area under Precision/Recall Curve: 0.7543780337259568 
+Number of training samples after undersampling: 84 
+Area under ROC: 0.75 
+Area under Precision/Recall Curve: 0.9090909090909091 

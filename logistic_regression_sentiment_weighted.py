@@ -3,7 +3,8 @@ from pyspark.ml.feature import RegexTokenizer, StopWordsRemover, CountVectorizer
 from pyspark.ml.classification import LogisticRegression
 from pyspark.ml import Pipeline
 from pyspark.mllib.evaluation import BinaryClassificationMetrics
-from pyspark.sql.functions import col
+import pyspark.sql.functions as F
+from itertools import chain
 import re
 from nltk.corpus import stopwords
 import json
@@ -14,6 +15,8 @@ import sys
 import urllib.request
 import json
 import gzip
+import numpy as np
+
 
 def load_file(num_examples):
   link = "http://snap.stanford.edu/data/amazon/productGraph/categoryFiles/reviews_Cell_Phones_and_Accessories_5.json.gz"
@@ -68,7 +71,6 @@ def clean(review):
   review = review.translate(str.maketrans('', '', punctuation))
   return review
 
-
 print('Preparing Data.\n')
 relevant_info = [(line['reviewText'], 
                  line['overall']) 
@@ -76,7 +78,6 @@ relevant_info = [(line['reviewText'],
 
 print('Parallelizing and Preprocessing.\n')
 rdd = sc.parallelize(relevant_info)
-
 
 #Removing Neutral reviews
 rdd = rdd.filter(lambda x: x[1] != 3.0)
@@ -97,23 +98,23 @@ data = rdd.toDF(schema = schema)
 data.show()
 data.printSchema()
 
-#Undersampling positive reviews to avoid class imbalance
-major_df = data.filter(col('label') == 1)
-minor_df = data.filter(col('label') == 0)
+print('Calculating Class Weights. \n')
+label_collect = data.select('label').groupby('label').count().collect()
+unique_labels = [x['label'] for x in label_collect]
+total_labels = sum([x['count'] for x in label_collect])
+unique_label_count = len(label_collect)
+bin_count = [x['count'] for x in label_collect]
+class_weights_spark = {i: ii for i, ii in zip(unique_labels, total_labels / (unique_label_count * np.array(bin_count)))}
+mapping_expr = F.create_map([F.lit(x) for x in chain(*class_weights_spark.items())])
+data = data.withColumn('weight', mapping_expr.getItem(F.col('label')))
 
-diff = minor_df.count() / major_df.count()
+print('Class Weights: \n')
+print(class_weights_spark)
 
-if diff < .4:
-  sampled_majority_df = major_df.sample(False, diff)
-  data = sampled_majority_df.unionAll(minor_df)
-
-
-print('Counts from Undersampling Largest Class: ')
-data.groupBy('label').count().show()
 
 #Begin building preprocessing pipeline
 
-#Steps: Word tokenize --> remove stopwords --> convert to BoW vectors --> fit to LR Model
+#Steps: Word tokenize --> remove stopwords --> convert to BoW vectors
 print('Building Pipeline.\n')
 regexTokenizer = RegexTokenizer(inputCol = 'review',
                                 outputCol = 'tokenized',
@@ -127,7 +128,9 @@ countVectorizer = CountVectorizer(inputCol = "removed_sw",
                                vocabSize = 10000, 
                                minDF = 5)
 
-lr = LogisticRegression(featuresCol = 'features', labelCol = 'label')
+lr = LogisticRegression(featuresCol = 'features', 
+                        labelCol = 'label',
+                        weightCol = 'weight')
 
 pipeline = Pipeline(stages = [regexTokenizer, stopwordsRemover, countVectorizer, lr])
 
@@ -139,9 +142,16 @@ train_data, test_data = data.randomSplit([0.9, 0.1])
 print('Fitting training data to pipeline.\n')
 pipelineFit = pipeline.fit(train_data)
 transformed_train_data = pipelineFit.transform(train_data)
+#transformed_train_data.show()
+
+#Begin Logistic Regression
+print('Training Logistic Regression Model.\n')
+#lr = LogisticRegression(featuresCol = 'features', labelCol = 'label')
+#lrModel = lr.fit(transformed_train_data)
 
 #Predict on test data
 print('Predicting on testing data.\n')
+#test_predictions = lrModel.transform(pipelineFit.transform(test_data))
 test_predictions = pipelineFit.transform(test_data)
 
 #Calculate Metrics
@@ -160,9 +170,7 @@ with open('metrics/logistic_regression_sentiment_results.txt', 'w') as metricfil
     metricfile.write('Area under ROC: {} \n'.format(auroc))
     metricfile.write('Area under Precision/Recall Curve: {} \n'.format(aupr))
 
-pipelinepath = '/models/logistic_regression_sentiment'
-pipelineFit.write().overwrite().save(pipelinepath)
-
-
-
-
+#modelpath = '/models/logistic_regression_sentiment/'
+#pipelineFit.save(sc, modelpath)
+#pipelineFit.write().overwrite().save(modelpath)
+#lrModel.write().overwrite().save(modelpath)

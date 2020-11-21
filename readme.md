@@ -4,6 +4,14 @@ These are some pyspark demonstrations for NLP purposes.
 All models are saved to the `\models` directory. 
 # Files
 
+`/models`
+
+Serialized form of trained pyspark models and pipelines
+
+`/metrics`
+
+Resulting metrics after training models
+
 `logistic_regression_sentiment.py`
 
 This file builds a simple logistic regression model using a BoW approach. 
