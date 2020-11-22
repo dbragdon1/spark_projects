@@ -21,4 +21,4 @@ This file does not impliment any cross-validation or strenuous hyperparameter tu
 
 ## Interpretation:
 
-On unseen data, we can expect to be off by 1.699 "stars" when trying to predict a user's rating of a product. Train RMSE is much larger than TEST RMSE, meaning we probably overfit model to the training set. 
+On unseen data, we can expect to be off by 1.699 "stars" when trying to predict a user's rating of a product. Train RMSE is much larger than Test RMSE, meaning we probably overfit model to the training set. 
