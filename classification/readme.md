@@ -5,6 +5,7 @@ This is a set of examples of classification on Amazon Product reviews.
 
 ## `logistic_regression_sentiment.py`
 
+## About
 This file builds a simple logistic regression model using a BoW approach. 
 
 The dataset label set ranges from 1.0 to 5.0. For the purpose of this project, I removed neutrally labelled points (3.0) set any point below 3.0 as 0, and any point above 3.0 as 1. 
