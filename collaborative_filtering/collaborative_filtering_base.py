@@ -7,9 +7,7 @@ from pyspark.ml.evaluation import RegressionEvaluator
 from numpy import array
 import sys
 sys.path.append('..')
-print(sys.path)
 from pyspark.ml import Pipeline
-#from .helper_functions import load_amazon_cellphones
 from helper_functions import load_amazon_cellphones
 
 
