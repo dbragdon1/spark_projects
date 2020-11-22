@@ -1,7 +1,10 @@
-# Purpose
+# About
+
 These are some pyspark demonstrations for NLP purposes.
 
-All models are saved to the `\models` directory. 
+The dataset used for each model is collected from [Professor Julian McAuley's Amazon product dataset](https://jmcauley.ucsd.edu/data/amazon/). This specific subset is titled "Cell Phones and Accessories". 
+
+
 # Files and Directories
 
 ## `/models`
@@ -12,59 +15,21 @@ Serialized form of trained pyspark models and pipelines
 
 Resulting metrics after training models
 
-## `logistic_regression_sentiment.py`
+## `/classification`
 
-## About
+Contains a series of files demonstrating text classification with Apache Spark using Amazon product reviews. 
 
-This file builds a simple logistic regression model using a BoW approach. 
+## `/collaborative_filtering`
 
-The dataset is collected from [Professor Julian McAuley's Amazon product dataset](https://jmcauley.ucsd.edu/data/amazon/). This specific subset is titled "Cell Phones and Accessories". 
-
-The dataset label set ranges from 1.0 to 5.0. For the purpose of this project, I removed neutrally labelled points (3.0) set any point below 3.0 as 0, and any point above 3.0 as 1. 
-
-## Usage
-
-Navigate to the directory of the file and run like so:
-
-``` bash
-python logistic_regression_sentiment.py
-```
-**WARNING:** The resulting RDD is very large and the program will not run if you do not have enough memory to allocate. For this reason you can select the amount of points you'd like to train the model on like this:
-
-``` bash
-python logistic_regression_sentiment.py 1000
-```
-
-This will train the model using 1000 samples. 
-
-**Note:** This file tries to automatically rebalance the classes, since the transformed labelset if very imbalanced in favor of positive (1) labels. If there are many points missing after imbalancing, it is because the model attempted to undersample the data.
-
-Not specifying any limit will let the model train on the entire dataset. 
-
-## Results
-
-| Area Under ROC | Area Under PR |
-|:--------------:|:-------------:|
-|      0.796     |     0.754     |
-
-
-## `logistic_regression_sentiment_weighted.py`
-
-## About
-
-This file builds on the previous file, and implements class-weighting. The method for factoring in class weights (in `scikit-learn` fashion), was found from [this awesome blog post](https://danvatterott.com/blog/2019/11/18/balancing-model-weights-in-pyspark/). This resulted in a dramatic increase in performance from the unweighted model, as displayed in the results section below. The code for implementing class-weighting is found in the `get_class_weights()` method in the `helper_functions.py` file. 
-
-## Usage
-
-This file can be used in the same way that `logistic_regression_sentiment.py` is used, but it also implements class weights instead of undersampling the highest class. 
-
-## Results
-
-| Area Under ROC | Area Under PR |
-|:--------------:|:-------------:|
-|      0.841    |     0.955     |
+Contains files for demonstrating collaborative filtering on text classification.
 
 ## `helper_functions.py`
 
-Contains helper functions for training models. 
+Contains helper functions for training models and loading data. 
+
+
+
+
+
+
 
